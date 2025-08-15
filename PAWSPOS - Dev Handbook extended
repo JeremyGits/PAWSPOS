@@ -1,0 +1,2367 @@
+# PAWSPOS Developer Handbook — Full Source Guide
+
+_Generated 2025-08-15T04:11:34.560399Z_
+
+This document enumerates every source file and also provides a consolidated API table, environment variables referenced, and model fields.
+
+## API Quick Reference (Consolidated)
+
+| File | Method | Path |
+|---|---|---|
+| `backend/routes/category.routes.js` | **GET** | `/` |
+| `backend/routes/devices.routes.js` | **GET** | `/` |
+| `backend/routes/modifier.routes.js` | **GET** | `/` |
+| `backend/routes/products.routes.js` | **GET** | `/` |
+| `backend/routes/category.routes.js` | **POST** | `/` |
+| `backend/routes/devices.routes.js` | **POST** | `/` |
+| `backend/routes/modifier.routes.js` | **POST** | `/` |
+| `backend/routes/products.routes.js` | **POST** | `/` |
+| `backend/routes/webhooks.coinbase.routes.js` | **POST** | `/` |
+| `backend/routes/webhooks.stripe.routes.js` | **POST** | `/` |
+| `backend/routes/category.routes.js` | **DELETE** | `/:id` |
+| `backend/routes/modifier.routes.js` | **DELETE** | `/:id` |
+| `backend/routes/products.routes.js` | **DELETE** | `/:id` |
+| `backend/routes/category.routes.js` | **GET** | `/:id` |
+| `backend/routes/modifier.routes.js` | **GET** | `/:id` |
+| `backend/routes/payments.routes.js` | **GET** | `/:id` |
+| `backend/routes/products.routes.js` | **GET** | `/:id` |
+| `backend/routes/category.routes.js` | **PUT** | `/:id` |
+| `backend/routes/modifier.routes.js` | **PUT** | `/:id` |
+| `backend/routes/products.routes.js` | **PUT** | `/:id` |
+| `backend/routes/devices.routes.js` | **POST** | `/:id/heartbeat` |
+| `backend/routes/products.routes.js` | **DELETE** | `/:id/modifier-sets` |
+| `backend/routes/products.routes.js` | **POST** | `/:id/modifier-sets` |
+| `backend/routes/products.routes.js` | **PUT** | `/:id/modifier-sets` |
+| `backend/routes/inventory.routes.js` | **POST** | `/adjust` |
+| `backend/routes/payments.routes.js` | **POST** | `/crypto/charge` |
+| `backend/routes/reports.routes.js` | **GET** | `/dashboard` |
+| `backend/routes/profiles.routes.js` | **GET** | `/devices` |
+| `backend/routes/rates.routes.js` | **GET** | `/doge` |
+| `backend/routes/webhooks.gigawallet.routes.js` | **POST** | `/doge` |
+| `backend/routes/wallets.routes.js` | **POST** | `/doge/:walletId/address` |
+| `backend/routes/wallets.routes.js` | **POST** | `/doge/:walletId/sweep` |
+| `backend/routes/doge.routes.js` | **POST** | `/doge/address` |
+| `backend/routes/payments.doge.routes.js` | **POST** | `/doge/address` |
+| `backend/routes/doge.routes.js` | **GET** | `/doge/health` |
+| `backend/routes/payments.doge.gw.routes.js` | **POST** | `/doge/invoice` |
+| `backend/routes/wallets.routes.js` | **POST** | `/doge/pos` |
+| `backend/routes/doge.routes.js` | **POST** | `/doge/sweep` |
+| `backend/routes/inventory.routes.js` | **GET** | `/items` |
+| `backend/routes/inventory.routes.js` | **POST** | `/items` |
+| `backend/routes/inventory.routes.js` | **GET** | `/ledger` |
+| `backend/routes/inventory.routes.js` | **GET** | `/levels` |
+| `backend/routes/inventory.routes.js` | **GET** | `/locations` |
+| `backend/routes/inventory.routes.js` | **POST** | `/locations` |
+| `backend/routes/auth.routes.js` | **POST** | `/login` |
+| `backend/routes/auth.routes.js` | **POST** | `/logout` |
+| `backend/routes/auth.routes.js` | **GET** | `/me` |
+| `backend/routes/profiles.routes.js` | **GET** | `/modes` |
+| `backend/routes/inventory.routes.js` | **GET** | `/overview` |
+| `backend/routes/profiles.routes.js` | **GET** | `/printers` |
+| `backend/routes/inventory.routes.js` | **POST** | `/receive` |
+| `backend/routes/auth.routes.js` | **POST** | `/refresh` |
+| `backend/routes/payments.routes.js` | **POST** | `/refund` |
+| `backend/routes/payments.routes.js` | **POST** | `/terminal/capture` |
+| `backend/routes/payments.routes.js` | **POST** | `/terminal/connection_token` |
+| `backend/routes/payments.routes.js` | **POST** | `/terminal/create_intent` |
+| `backend/routes/inventory.routes.js` | **POST** | `/transfer` |
+| `backend/routes/payments.routes.js` | **POST** | `/void` |
+| `backend/routes/webhooks.coinremitter.routes.js` | **GET** | `/wallet` |
+| `backend/routes/webhooks.coinremitter.routes.js` | **POST** | `/wallet` |
+| `backend/routes/webhooks.coinremitter.routes.js` | **POST** | `/wallet` |
+| `backend/routes/webhooks.doge.routes.js` | **GET** | `/walletnotify` |
+
+
+## Data Models (Top-level fields)
+
+### `backend/models/Inventory.js`
+| Field | Type |
+|---|---|
+| `product` | `mongoose.Schema.Types.ObjectId` |
+| `variantSku` | `String` |
+| `qty` | `Number` |
+| `minQty` | `Number` |
+| `location` | `String` |
+
+### `backend/models/User.js`
+| Field | Type |
+|---|---|
+| `email` | `String` |
+| `emailNorm` | `String` |
+| `name` | `String` |
+| `passwordHash` | `String` |
+| `mfaEnabled` | `Boolean` |
+| `mfaSecret` | `String` |
+| `role` | `String` |
+| `roles` | `{ type: [String], enum: rolesEnum, default: ['cashier'], index: true }` |
+| `allowedPosModes` | `{
+      type: [String],
+      enum: posModesEnum, 
+      default: ['standard','kiosk','kitchen','bar'],
+      set: normalizePosModes, 
+    }` |
+| `isActive` | `Boolean` |
+| `lastLoginAt` | `Date` |
+| `loginCount` | `Number` |
+
+### `backend/models/category.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `active` | `Boolean` |
+
+### `backend/models/device.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `type` | `String` |
+| `mode` | `String` |
+| `deviceProfileId` | `Schema.Types.ObjectId` |
+| `printerProfileId` | `Schema.Types.ObjectId` |
+| `status` | `String` |
+| `lastSeenAt` | `Date` |
+| `meta` | `Schema.Types.Mixed` |
+| `createdBy` | `Schema.Types.ObjectId` |
+
+### `backend/models/deviceCode.model.js`
+| Field | Type |
+|---|---|
+| `code` | `String` |
+| `status` | `String` |
+| `expiresAt` | `Date` |
+| `claimedBy` | `Schema.Types.ObjectId` |
+| `claimedAt` | `Date` |
+| `meta` | `Schema.Types.Mixed` |
+
+### `backend/models/deviceProfile.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `allowedModes` | `{ type: [String], enum: PosModeKeys, default: ['standard','kiosk','kitchen','bar'] }` |
+| `defaultMode` | `String` |
+| `printerProfileId` | `Schema.Types.ObjectId` |
+| `kdsCategories` | `{ type: [String], default: [] }` |
+
+### `backend/models/inventory/item.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `type` | `String` |
+| `description` | `String` |
+| `type` | `String` |
+| `trim` | `true` |
+| `variations` | `{ type: [VariationSchema], default: [] }` |
+| `active` | `Boolean` |
+
+### `backend/models/inventory/location.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `code` | `String` |
+| `active` | `Boolean` |
+
+### `backend/models/inventory/stockLevel.model.js`
+| Field | Type |
+|---|---|
+| `sku` | `String` |
+| `locationId` | `mongoose.Schema.Types.ObjectId` |
+| `qty` | `Number` |
+
+### `backend/models/inventory/stockMove.model.js`
+| Field | Type |
+|---|---|
+| `sku` | `String` |
+| `locationId` | `mongoose.Schema.Types.ObjectId` |
+| `qty` | `Number` |
+| `unitCost` | `Number` |
+| `type` | `String` |
+| `note` | `String` |
+| `by` | `mongoose.Schema.Types.ObjectId` |
+
+### `backend/models/inventoryItem.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `sku` | `String` |
+| `barcode` | `String` |
+| `unit` | `String` |
+| `price` | `Number` |
+| `cost` | `Number` |
+| `trackStock` | `Boolean` |
+| `lowStockThreshold` | `Number` |
+| `active` | `Boolean` |
+
+### `backend/models/inventoryLevel.model.js`
+| Field | Type |
+|---|---|
+| `item` | `mongoose.Schema.Types.ObjectId` |
+| `variationId` | `mongoose.Schema.Types.ObjectId` |
+| `location` | `mongoose.Schema.Types.ObjectId` |
+| `onHand` | `Number` |
+| `committed` | `Number` |
+| `reserved` | `Number` |
+
+### `backend/models/ledgerEntry.model.js`
+| Field | Type |
+|---|---|
+| `journalType` | `String` |
+| `refType` | `String` |
+| `refId` | `Schema.Types.ObjectId` |
+| `currency` | `String` |
+| `lines` | `{ type: [LedgerLineSchema], validate: v => v?.length >= 2 }` |
+| `postedAt` | `Date` |
+| `metadata` | `Schema.Types.Mixed` |
+
+### `backend/models/location.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `code` | `String` |
+| `active` | `Boolean` |
+
+### `backend/models/modifier.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `displayName` | `String` |
+| `selection` | `Boolean` |
+| `min` | `Number` |
+| `max` | `Number` |
+| `options` | `{ type: [ModifierOptionSchema], default: [] }` |
+| `active` | `Boolean` |
+
+### `backend/models/order.model.js`
+| Field | Type |
+|---|---|
+| `orderNumber` | `String` |
+| `channel` | `String` |
+| `status` | `String` |
+| `notes` | `String` |
+| `subtotalCents` | `Number` |
+| `taxCents` | `Number` |
+| `discountCents` | `Number` |
+| `tipCents` | `Number` |
+| `totalCents` | `Number` |
+| `customerId` | `Schema.Types.ObjectId` |
+| `deviceId` | `String` |
+
+### `backend/models/payment.model.js`
+| Field | Type |
+|---|---|
+| `orderId` | `Schema.Types.ObjectId` |
+| `method` | `String` |
+| `amountCents` | `Number` |
+| `currency` | `String` |
+| `required` | `true` |
+| `provider` | `String` |
+| `status` | `String` |
+| `providerRef` | `String` |
+| `providerCode` | `String` |
+| `card` | `CardSchema` |
+| `crypto` | `CryptoSchema` |
+| `fxQuote` | `FxQuoteSchema` |
+| `capturedCents` | `Number` |
+| `refundedCents` | `Number` |
+| `error` | `String` |
+| `meta` | `Schema.Types.Mixed` |
+| `createdBy` | `Schema.Types.ObjectId` |
+
+### `backend/models/payrun.model.js`
+| Field | Type |
+|---|---|
+| `staffId` | `Schema.Types.ObjectId` |
+| `name` | `String` |
+| `hours` | `Number` |
+| `overtimeHours` | `Number` |
+| `hourlyRateCents` | `Number` |
+| `grossCents` | `Number` |
+| `tipsCents` | `Number` |
+| `taxFedCents` | `Number` |
+| `taxStateCents` | `Number` |
+| `employerTaxCents` | `Number` |
+| `netCents` | `Number` |
+
+### `backend/models/posMode.model.js`
+| Field | Type |
+|---|---|
+| `key` | `String` |
+| `name` | `String` |
+| `desc` | `String` |
+| `active` | `Boolean` |
+
+### `backend/models/printerProfile.model.js`
+| Field | Type |
+|---|---|
+| `receipts` | `Boolean` |
+| `inPersonOrderTickets` | `Boolean` |
+| `onlineOrderTickets` | `Boolean` |
+| `orderTicketStubs` | `Boolean` |
+| `voidTickets` | `Boolean` |
+| `barcodeLabels` | `Boolean` |
+
+### `backend/models/product.model.js`
+| Field | Type |
+|---|---|
+| `name` | `String` |
+| `category` | `String` |
+| `price` | `Number` |
+| `taxRate` | `Number` |
+| `type` | `String` |
+| `trim` | `true` |
+| `active` | `Boolean` |
+| `trackInventory` | `Boolean` |
+| `type` | `Schema.Types.ObjectId` |
+| `index` | `true` |
+
+### `backend/models/staff.model.js`
+| Field | Type |
+|---|---|
+| `userId` | `Schema.Types.ObjectId` |
+| `name` | `String` |
+| `email` | `String` |
+| `phone` | `String` |
+| `role` | `String` |
+| `location` | `String` |
+| `active` | `Boolean` |
+| `payrollEligible` | `Boolean` |
+| `wageType` | `String` |
+| `hourlyRateCents` | `Number` |
+| `salaryCents` | `Number` |
+| `posPinHash` | `String` |
+| `notes` | `String` |
+| `externalPayrollRef` | `String` |
+
+### `backend/models/stockLedger.model.js`
+| Field | Type |
+|---|---|
+| `item` | `mongoose.Schema.Types.ObjectId` |
+| `variationId` | `mongoose.Schema.Types.ObjectId` |
+| `location` | `mongoose.Schema.Types.ObjectId` |
+| `type` | `String` |
+| `qty` | `Number` |
+| `unitCost` | `Number` |
+| `reason` | `String` |
+| `note` | `String` |
+| `createdBy` | `mongoose.Schema.Types.ObjectId` |
+| `refType` | `String` |
+| `refId` | `String` |
+
+### `backend/models/timesheet.model.js`
+| Field | Type |
+|---|---|
+| `staffId` | `Schema.Types.ObjectId` |
+| `userId` | `Schema.Types.ObjectId` |
+| `clockInAt` | `Date` |
+| `clockOutAt` | `Date` |
+| `breaksSec` | `Number` |
+| `tipsCents` | `Number` |
+| `deviceId` | `String` |
+| `notes` | `String` |
+
+### `backend/models/tx.model.js`
+| Field | Type |
+|---|---|
+| `walletId` | `Schema.Types.ObjectId` |
+| `coin` | `String` |
+| `address` | `String` |
+| `direction` | `String` |
+| `txid` | `String` |
+| `amount` | `Number` |
+| `vouts` | `Array` |
+| `confs` | `Number` |
+| `status` | `String` |
+| `note` | `String` |
+| `meta` | `Schema.Types.Mixed` |
+
+### `backend/models/wallet.model.js`
+| Field | Type |
+|---|---|
+| `kind` | `String` |
+| `label` | `String` |
+| `coin` | `String` |
+| `accountPath` | `String` |
+| `xpub` | `String` |
+| `nextIndex` | `Number` |
+| `deviceId` | `Schema.Types.ObjectId` |
+| `userId` | `Schema.Types.ObjectId` |
+| `balanceDoge` | `Number` |
+| `meta` | `Schema.Types.Mixed` |
+
+
+
+## Environment Variables (Observed in Code)
+
+- `API_BASE_URL`
+- `APP_BASE_URL`
+- `APP_VERSION`
+- `COINBASE_API_KEY`
+- `COINBASE_COMMERCE_API_KEY`
+- `COINBASE_COMMERCE_BASE`
+- `COINBASE_COMMERCE_WEBHOOK_SECRET`
+- `COINGECKO_API`
+- `COINREMITTER_API_KEY`
+- `COINREMITTER_DOGE_API_KEY`
+- `COINREMITTER_DOGE_API_PASSWORD`
+- `COINREMITTER_PASSWORD`
+- `COINREMITTER_WEBHOOK_TOKEN`
+- `CORS_ORIGIN`
+- `CURRENCY`
+- `DOGE_INCLUDE_WATCHONLY`
+- `DOGE_MASTER_ADDRESS`
+- `DOGE_MASTER_TREASURY_ADDRESS`
+- `DOGE_MASTER_XPRV`
+- `DOGE_MIN_CONF`
+- `DOGE_MIN_CONFIRMATIONS`
+- `DOGE_OVERWRITE_AMOUNT_ON_CONFIRM`
+- `DOGE_POLL_INTERVAL_MS`
+- `DOGE_PRICE_POLL_MS`
+- `DOGE_PRICE_SOURCE`
+- `DOGE_RPC_PASS`
+- `DOGE_RPC_TIMEOUT_MS`
+- `DOGE_RPC_URL`
+- `DOGE_RPC_USER`
+- `DOGE_WALLET`
+- `DOGE_WATCHER_MIN_CONF`
+- `DOGE_WATCHER_POLL_MS`
+- `DOGE_WATCHER_WINDOW_TX`
+- `FIAT_DEFAULT_CURRENCY`
+- `GIGAWALLET_ADMIN_BASE`
+- `GIGAWALLET_ADMIN_TOKEN`
+- `GIGAWALLET_DOGE_USD_PRICE`
+- `GIGAWALLET_PUBLIC_BASE`
+- `GIGAWALLET_WEBHOOK_TOKEN`
+- `JWT_EXPIRES_IN`
+- `JWT_REFRESH_EXPIRES_IN`
+- `JWT_REFRESH_SECRET`
+- `JWT_SECRET`
+- `LOG_LEVEL`
+- `MONGODB_URI`
+- `MONGO_URI`
+- `NODE_ENV`
+- `OVERTIME_MULTIPLIER`
+- `PAYROLL_ER_FICA`
+- `PAYROLL_TAX_FED`
+- `PAYROLL_TAX_STATE`
+- `PAYSIM_AUTH_APPROVAL_RATE`
+- `PAYSIM_CAPTURE_MODE`
+- `PAYSIM_DEV_ALLOW_SIM`
+- `PORT`
+- `SEED_EMAIL`
+- `SEED_NAME`
+- `SEED_PASSWORD`
+- `SEED_ROLE`
+- `STRIPE_CURRENCY`
+- `STRIPE_SECRET`
+- `STRIPE_TERMINAL_WEBHOOK_SECRET`
+- `TOKEN_VAULT_DEV_KEY`
+
+## Backend
+
+### `backend/.env`
+
+- **Size:** 3008 bytes, **Lines:** 94
+- **Kind:** source
+
+
+### `backend/config/db.js`
+
+- **Size:** 429 bytes, **Lines:** 15
+- **Kind:** config
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/config/doge.js`
+
+- **Size:** 598 bytes, **Lines:** 11
+- **Kind:** config
+- **Env vars referenced:** `DOGE_MASTER_ADDRESS, DOGE_MIN_CONFIRMATIONS, DOGE_POLL_INTERVAL_MS, DOGE_RPC_PASS, DOGE_RPC_URL, DOGE_RPC_USER, DOGE_WALLET`
+
+
+### `backend/config/env.js`
+
+- **Size:** 18 bytes, **Lines:** 2
+- **Kind:** config
+
+
+### `backend/controllers/auth.controller.js`
+
+- **Size:** 5777 bytes, **Lines:** 174
+- **Kind:** controller
+- **Env vars referenced:** `JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, JWT_REFRESH_SECRET, JWT_SECRET, NODE_ENV`
+
+**Exports**
+`login`, `logout`, `me`, `refresh`
+
+
+### `backend/controllers/categories.controller.js`
+
+- **Size:** 1596 bytes, **Lines:** 39
+- **Kind:** controller
+
+
+### `backend/controllers/category.controller.js`
+
+- **Size:** 2634 bytes, **Lines:** 64
+- **Kind:** controller
+
+
+### `backend/controllers/inventory.controller.js`
+
+- **Size:** 11059 bytes, **Lines:** 367
+- **Kind:** controller
+
+
+### `backend/controllers/modifier.controller.js`
+
+- **Size:** 3779 bytes, **Lines:** 104
+- **Kind:** controller
+
+
+### `backend/controllers/orders.controller.js`
+
+- **Size:** 5580 bytes, **Lines:** 158
+- **Kind:** controller
+
+**Exports**
+`createOrder`, `getOrder`, `listOrders`, `updateOrderStatus`, `voidOrder`
+
+
+### `backend/controllers/payments.controller.js`
+
+- **Size:** 4177 bytes, **Lines:** 114
+- **Kind:** controller
+- **Env vars referenced:** `CURRENCY`
+
+**Exports**
+`chargePayment`, `debugEcho`, `refundPayment`
+
+
+### `backend/controllers/payments.internal.controller.js`
+
+- **Size:** 2444 bytes, **Lines:** 60
+- **Kind:** controller
+- **Env vars referenced:** `PAYSIM_DEV_ALLOW_SIM`
+
+**Exports**
+`createCharge`, `cryptoSimConfirm`, `getPayment`, `refundPayment`, `simCreateToken`, `simInspectToken`
+
+
+### `backend/controllers/payroll.controller.js`
+
+- **Size:** 3975 bytes, **Lines:** 110
+- **Kind:** controller
+
+**Exports**
+`approveRun`, `createRun`, `listRuns`, `payRun`
+
+
+### `backend/controllers/product.controller.js`
+
+- **Size:** 880 bytes, **Lines:** 26
+- **Kind:** controller
+
+
+### `backend/controllers/products.controller.js`
+
+- **Size:** 5020 bytes, **Lines:** 177
+- **Kind:** controller
+
+**Exports**
+`addModifierSets`, `createProduct`, `deleteProduct`, `getProduct`, `listProducts`, `removeModifierSets`, `replaceModifierSets`, `updateProduct`
+
+
+### `backend/controllers/reports.controller.js`
+
+- **Size:** 2910 bytes, **Lines:** 89
+- **Kind:** controller
+
+**Exports**
+`getDashboard`
+
+
+### `backend/controllers/staff.controller.js`
+
+- **Size:** 1926 bytes, **Lines:** 52
+- **Kind:** controller
+
+**Exports**
+`createStaff`, `deactivateStaff`, `listStaff`, `setPin`, `updateStaff`
+
+
+### `backend/controllers/time.controller.js`
+
+- **Size:** 1573 bytes, **Lines:** 39
+- **Kind:** controller
+
+**Exports**
+`punch`, `today`
+
+
+### `backend/crypto/dogeHd.js`
+
+- **Size:** 2542 bytes, **Lines:** 69
+- **Kind:** source
+
+**Exports**
+`buildAndSignSweep`, `deriveReceiveAddress`, `getAccountNodeFromMasterXprv`, `xpubFromAccountNode`
+
+
+### `backend/crypto/dogeRpc.js`
+
+- **Size:** 997 bytes, **Lines:** 25
+- **Kind:** source
+- **Env vars referenced:** `DOGE_RPC_PASS, DOGE_RPC_TIMEOUT_MS, DOGE_RPC_URL, DOGE_RPC_USER`
+
+**Exports**
+`logDogeRpcTarget`, `rpc`
+
+**What it does**: Low-level RPC client used by services; centralizes target logging & axios client with base auth/timeouts.
+
+
+### `backend/middleware/auth.js`
+
+- **Size:** 891 bytes, **Lines:** 29
+- **Kind:** middleware
+- **Env vars referenced:** `JWT_SECRET`
+
+**Exports**
+`authenticate`, `requireRoles`
+
+
+### `backend/middleware/authRequired.js`
+
+- **Size:** 623 bytes, **Lines:** 19
+- **Kind:** middleware
+- **Env vars referenced:** `JWT_SECRET`
+
+**Exports**
+`authRequired`
+
+
+### `backend/middleware/errorHandler.js`
+
+- **Size:** 459 bytes, **Lines:** 11
+- **Kind:** middleware
+- **Env vars referenced:** `NODE_ENV`
+
+**Exports**
+`function`
+
+
+### `backend/middleware/notFound.js`
+
+- **Size:** 207 bytes, **Lines:** 9
+- **Kind:** middleware
+
+**Exports**
+`function`
+
+
+### `backend/middleware/rateLimiter.js`
+
+- **Size:** 212 bytes, **Lines:** 11
+- **Kind:** middleware
+
+**Exports**
+`limiter`
+
+
+### `backend/middleware/requestId.js`
+
+- **Size:** 303 bytes, **Lines:** 10
+- **Kind:** middleware
+
+
+### `backend/middleware/requireAuth.js`
+
+- **Size:** 2759 bytes, **Lines:** 91
+- **Kind:** middleware
+- **Env vars referenced:** `JWT_SECRET`
+
+**Exports**
+`optionalAuth`, `requireAuth`, `requireRoles`
+
+
+### `backend/middleware/requireRoles.js`
+
+- **Size:** 326 bytes, **Lines:** 8
+- **Kind:** middleware
+
+
+### `backend/middleware/roles.js`
+
+- **Size:** 188 bytes, **Lines:** 6
+- **Kind:** middleware
+
+
+### `backend/models/Inventory.js`
+
+- **Size:** 370 bytes, **Lines:** 10
+- **Kind:** model
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/User.js`
+
+- **Size:** 2938 bytes, **Lines:** 87
+- **Kind:** model
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/category.model.js`
+
+- **Size:** 599 bytes, **Lines:** 22
+- **Kind:** model
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/device.model.js`
+
+- **Size:** 979 bytes, **Lines:** 25
+- **Kind:** model
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/deviceCode.model.js`
+
+- **Size:** 670 bytes, **Lines:** 15
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `code`: `String`
+- `status`: `String`
+- `expiresAt`: `Date`
+- `claimedBy`: `Schema.Types.ObjectId`
+- `claimedAt`: `Date`
+- `meta`: `Schema.Types.Mixed`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/deviceProfile.model.js`
+
+- **Size:** 720 bytes, **Lines:** 15
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `name`: `String`
+- `allowedModes`: `{ type: [String], enum: PosModeKeys, default: ['standard','kiosk','kitchen','bar'] }`
+- `defaultMode`: `String`
+- `printerProfileId`: `Schema.Types.ObjectId`
+- `kdsCategories`: `{ type: [String], default: [] }`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/inventory/item.model.js`
+
+- **Size:** 908 bytes, **Lines:** 28
+- **Kind:** model
+
+
+### `backend/models/inventory/location.model.js`
+
+- **Size:** 624 bytes, **Lines:** 19
+- **Kind:** model
+
+**Exports**
+`Location`
+
+
+### `backend/models/inventory/stockLevel.model.js`
+
+- **Size:** 476 bytes, **Lines:** 15
+- **Kind:** model
+
+
+### `backend/models/inventory/stockMove.model.js`
+
+- **Size:** 656 bytes, **Lines:** 17
+- **Kind:** model
+
+
+### `backend/models/inventoryItem.model.js`
+
+- **Size:** 1574 bytes, **Lines:** 40
+- **Kind:** model
+
+**Exports**
+`InventoryItem`
+
+
+### `backend/models/inventoryLevel.model.js`
+
+- **Size:** 902 bytes, **Lines:** 22
+- **Kind:** model
+
+**Exports**
+`InventoryLevel`
+
+
+### `backend/models/ledgerEntry.model.js`
+
+- **Size:** 1194 bytes, **Lines:** 26
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `journalType`: `String`
+- `refType`: `String`
+- `refId`: `Schema.Types.ObjectId`
+- `currency`: `String`
+- `lines`: `{ type: [LedgerLineSchema], validate: v => v?.length >= 2 }`
+- `postedAt`: `Date`
+- `metadata`: `Schema.Types.Mixed`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/location.model.js`
+
+- **Size:** 466 bytes, **Lines:** 15
+- **Kind:** model
+
+
+### `backend/models/modifier.model.js`
+
+- **Size:** 907 bytes, **Lines:** 29
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `name`: `String`
+- `price`: `Number`
+- `active`: `Boolean`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/order.model.js`
+
+- **Size:** 2382 bytes, **Lines:** 80
+- **Kind:** model
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/payment.model.js`
+
+- **Size:** 2317 bytes, **Lines:** 65
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `orderId`: `Schema.Types.ObjectId`
+- `method`: `String`
+- `amountCents`: `Number`
+- `currency`: `String`
+- `provider`: `String`
+- `status`: `String`
+- `providerRef`: `String`
+- `providerCode`: `String`
+- `card`: `CardSchema`
+- `crypto`: `CryptoSchema`
+- `fxQuote`: `FxQuoteSchema`
+- `capturedCents`: `Number`
+- `refundedCents`: `Number`
+- `error`: `String`
+- `meta`: `Schema.Types.Mixed`
+- `createdBy`: `Schema.Types.ObjectId`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/payrun.model.js`
+
+- **Size:** 1490 bytes, **Lines:** 44
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `staffId`: `Schema.Types.ObjectId`
+- `name`: `String`
+- `hours`: `Number`
+- `overtimeHours`: `Number`
+- `hourlyRateCents`: `Number`
+- `grossCents`: `Number`
+- `tipsCents`: `Number`
+- `taxFedCents`: `Number`
+- `taxStateCents`: `Number`
+- `employerTaxCents`: `Number`
+- `netCents`: `Number`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/posMode.model.js`
+
+- **Size:** 543 bytes, **Lines:** 15
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `key`: `String`
+- `name`: `String`
+- `desc`: `String`
+- `active`: `Boolean`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/printerProfile.model.js`
+
+- **Size:** 890 bytes, **Lines:** 22
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `receipts`: `Boolean`
+- `inPersonOrderTickets`: `Boolean`
+- `onlineOrderTickets`: `Boolean`
+- `orderTicketStubs`: `Boolean`
+- `voidTickets`: `Boolean`
+- `barcodeLabels`: `Boolean`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/product.model.js`
+
+- **Size:** 1245 bytes, **Lines:** 41
+- **Kind:** model
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/staff.model.js`
+
+- **Size:** 1265 bytes, **Lines:** 29
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `userId`: `Schema.Types.ObjectId`
+- `name`: `String`
+- `email`: `String`
+- `phone`: `String`
+- `role`: `String`
+- `location`: `String`
+- `active`: `Boolean`
+- `payrollEligible`: `Boolean`
+- `wageType`: `String`
+- `hourlyRateCents`: `Number`
+- `salaryCents`: `Number`
+- `posPinHash`: `String`
+- `notes`: `String`
+- `externalPayrollRef`: `String`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/stockLedger.model.js`
+
+- **Size:** 1195 bytes, **Lines:** 28
+- **Kind:** model
+
+**Exports**
+`StockLedger`
+
+
+### `backend/models/timesheet.model.js`
+
+- **Size:** 808 bytes, **Lines:** 21
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `staffId`: `Schema.Types.ObjectId`
+- `userId`: `Schema.Types.ObjectId`
+- `clockInAt`: `Date`
+- `clockOutAt`: `Date`
+- `breaksSec`: `Number`
+- `tipsCents`: `Number`
+- `deviceId`: `String`
+- `notes`: `String`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/tx.model.js`
+
+- **Size:** 855 bytes, **Lines:** 21
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `walletId`: `Schema.Types.ObjectId`
+- `coin`: `String`
+- `address`: `String`
+- `direction`: `String`
+- `txid`: `String`
+- `amount`: `Number`
+- `vouts`: `Array`
+- `confs`: `Number`
+- `status`: `String`
+- `note`: `String`
+- `meta`: `Schema.Types.Mixed`
+
+**Exports**
+`mongoose`
+
+
+### `backend/models/wallet.model.js`
+
+- **Size:** 1038 bytes, **Lines:** 25
+- **Kind:** model
+
+**Schema fields (top-level)**
+- `kind`: `String`
+- `label`: `String`
+- `coin`: `String`
+- `accountPath`: `String`
+- `xpub`: `String`
+- `nextIndex`: `Number`
+- `deviceId`: `Schema.Types.ObjectId`
+- `userId`: `Schema.Types.ObjectId`
+- `balanceDoge`: `Number`
+- `meta`: `Schema.Types.Mixed`
+
+**Exports**
+`mongoose`
+
+
+### `backend/package-lock.json`
+
+- **Size:** 299175 bytes, **Lines:** 6848
+- **Kind:** source
+
+
+### `backend/package.json`
+
+- **Size:** 1450 bytes, **Lines:** 49
+- **Kind:** source
+
+
+### `backend/payments/engine.js`
+
+- **Size:** 2117 bytes, **Lines:** 75
+- **Kind:** source
+- **Env vars referenced:** `PAYSIM_AUTH_APPROVAL_RATE, PAYSIM_CAPTURE_MODE`
+
+**Exports**
+`charge`, `refund`
+
+
+### `backend/payments/providers/baseProvider.js`
+
+- **Size:** 350 bytes, **Lines:** 8
+- **Kind:** source
+
+
+### `backend/payments/providers/coinbaseCommerce.js`
+
+- **Size:** 1619 bytes, **Lines:** 50
+- **Kind:** source
+- **Env vars referenced:** `COINBASE_COMMERCE_API_KEY, COINBASE_COMMERCE_WEBHOOK_SECRET`
+
+**Exports**
+`createCharge`, `verifyAndParseWebhook`
+
+
+### `backend/payments/providers/coinremitterDoge.js`
+
+- **Size:** 3333 bytes, **Lines:** 105
+- **Kind:** source
+- **Env vars referenced:** `COINREMITTER_API_KEY, COINREMITTER_DOGE_API_KEY, COINREMITTER_DOGE_API_PASSWORD, COINREMITTER_PASSWORD`
+
+**Exports**
+`crCreateDogeAddress`, `crGetFiatToCrypto`, `crGetTransactionById`
+
+
+### `backend/payments/providers/cryptoSim.js`
+
+- **Size:** 601 bytes, **Lines:** 20
+- **Kind:** source
+
+
+### `backend/payments/providers/dogecoinCore.js`
+
+- **Size:** 1797 bytes, **Lines:** 56
+- **Kind:** source
+
+**Exports**
+`getBlockchainInfo`, `getNewAddress`, `getTransaction`, `listRecentTransactions`, `sendToAddress`
+
+**What it does**: Thin wrapper over Dogecoin Core JSON-RPC. Exposes helpers like `getNewAddress`, `listTransactions`, `getTransaction`, `sendToAddress`, `getBlockchainInfo`. Uses `DOGE.RPC_URL`, `DOGE.RPC_USER`, `DOGE.RPC_PASS` envs.
+
+
+### `backend/payments/providers/gigawallet.js`
+
+- **Size:** 1783 bytes, **Lines:** 46
+- **Kind:** source
+- **Env vars referenced:** `GIGAWALLET_ADMIN_BASE, GIGAWALLET_ADMIN_TOKEN, GIGAWALLET_PUBLIC_BASE`
+
+**Exports**
+`gwCreateInvoice`, `gwEnsureAccount`, `gwGetPublicInvoice`
+
+
+### `backend/payments/providers/mockAcquirer.js`
+
+- **Size:** 1845 bytes, **Lines:** 50
+- **Kind:** source
+- **Env vars referenced:** `PAYSIM_AUTH_APPROVAL_RATE`
+
+
+### `backend/payments/providers/stripeTerminal.js`
+
+- **Size:** 1359 bytes, **Lines:** 41
+- **Kind:** source
+- **Env vars referenced:** `STRIPE_CURRENCY, STRIPE_SECRET`
+
+**Exports**
+`capturePaymentIntent`, `createConnectionToken`, `createPaymentIntent`, `refundPayment`, `voidPayment`
+
+
+### `backend/routes/auth.routes.js`
+
+- **Size:** 610 bytes, **Lines:** 25
+- **Kind:** route
+
+**Routes**
+- `POST /login`
+- `POST /refresh`
+- `GET /me`
+- `POST /logout`
+
+**Exports**
+`router`
+
+
+### `backend/routes/categories.routes.js`
+
+- **Size:** 342 bytes, **Lines:** 15
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/category.routes.js`
+
+- **Size:** 747 bytes, **Lines:** 23
+- **Kind:** route
+
+**Routes**
+- `GET /`
+- `GET /:id`
+- `POST /`
+- `PUT /:id`
+- `DELETE /:id`
+
+**Exports**
+`router`
+
+
+### `backend/routes/devices.routes.js`
+
+- **Size:** 2330 bytes, **Lines:** 66
+- **Kind:** route
+
+**Routes**
+- `GET /`
+- `POST /`
+- `POST /:id/heartbeat`
+
+**Exports**
+`router`
+
+
+### `backend/routes/doge.routes.js`
+
+- **Size:** 3408 bytes, **Lines:** 95
+- **Kind:** route
+
+**Routes**
+- `POST /doge/address`
+- `POST /doge/sweep`
+- `GET /doge/health`
+
+**Exports**
+`router`
+
+**What it does**: Creates unique Dogecoin deposit addresses per sale/terminal and records a pending `Payment` with a price snapshot. Also exposes sweep & health endpoints.
+
+
+### `backend/routes/inventory.routes.js`
+
+- **Size:** 924 bytes, **Lines:** 45
+- **Kind:** route
+
+**Routes**
+- `POST /items`
+- `GET /items`
+- `GET /levels`
+- `GET /overview`
+- `POST /receive`
+- `POST /adjust`
+- `POST /transfer`
+- `GET /locations`
+- `POST /locations`
+- `GET /ledger`
+
+**Exports**
+`router`
+
+
+### `backend/routes/modifier.routes.js`
+
+- **Size:** 775 bytes, **Lines:** 23
+- **Kind:** route
+
+**Routes**
+- `GET /`
+- `GET /:id`
+- `POST /`
+- `PUT /:id`
+- `DELETE /:id`
+
+**Exports**
+`router`
+
+
+### `backend/routes/orders.routes.js`
+
+- **Size:** 923 bytes, **Lines:** 27
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/payments.doge.gw.routes.js`
+
+- **Size:** 3197 bytes, **Lines:** 81
+- **Kind:** route
+- **Env vars referenced:** `FIAT_DEFAULT_CURRENCY`
+
+**Routes**
+- `POST /doge/invoice`
+
+**Exports**
+`router`
+
+
+### `backend/routes/payments.doge.routes.js`
+
+- **Size:** 2432 bytes, **Lines:** 63
+- **Kind:** route
+- **Env vars referenced:** `FIAT_DEFAULT_CURRENCY`
+
+**Routes**
+- `POST /doge/address`
+
+**Exports**
+`router`
+
+
+### `backend/routes/payments.routes.js`
+
+- **Size:** 6229 bytes, **Lines:** 216
+- **Kind:** route
+- **Env vars referenced:** `FIAT_DEFAULT_CURRENCY, STRIPE_CURRENCY`
+
+**Routes**
+- `POST /terminal/connection_token`
+- `POST /terminal/create_intent`
+- `POST /terminal/capture`
+- `POST /refund`
+- `POST /void`
+- `POST /crypto/charge`
+- `GET /:id`
+
+**Exports**
+`router`
+
+
+### `backend/routes/payroll.routes.js`
+
+- **Size:** 616 bytes, **Lines:** 16
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/products.routes.js`
+
+- **Size:** 1185 bytes, **Lines:** 31
+- **Kind:** route
+
+**Routes**
+- `GET /`
+- `GET /:id`
+- `POST /`
+- `PUT /:id`
+- `DELETE /:id`
+- `POST /:id/modifier-sets`
+- `PUT /:id/modifier-sets`
+- `DELETE /:id/modifier-sets`
+
+**Exports**
+`router`
+
+
+### `backend/routes/profiles.routes.js`
+
+- **Size:** 1086 bytes, **Lines:** 38
+- **Kind:** route
+
+**Routes**
+- `GET /modes`
+- `GET /printers`
+- `GET /devices`
+
+**Exports**
+`router`
+
+
+### `backend/routes/rates.routes.js`
+
+- **Size:** 422 bytes, **Lines:** 18
+- **Kind:** route
+
+**Routes**
+- `GET /doge`
+
+**Exports**
+`router`
+
+
+### `backend/routes/reports.routes.js`
+
+- **Size:** 5828 bytes, **Lines:** 188
+- **Kind:** route
+
+**Routes**
+- `GET /dashboard`
+
+**Exports**
+`router`
+
+**What it does**: Aggregates `Payment` documents for dashboard: sums gross/returns, groups by method & crypto coin (DOGE/BTC/ETH/XRP/USDC) based on `meta.asset`/`crypto.network`, returns payment type buckets for the chart.
+
+
+### `backend/routes/settings.routes.js`
+
+- **Size:** 225 bytes, **Lines:** 5
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/staff.routes.js`
+
+- **Size:** 729 bytes, **Lines:** 19
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/time.routes.js`
+
+- **Size:** 354 bytes, **Lines:** 13
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/wallets.routes.js`
+
+- **Size:** 1478 bytes, **Lines:** 38
+- **Kind:** route
+
+**Routes**
+- `POST /doge/pos`
+- `POST /doge/:walletId/address`
+- `POST /doge/:walletId/sweep`
+
+**Exports**
+`router`
+
+
+### `backend/routes/webhooks.coinbase.routes.js`
+
+- **Size:** 3816 bytes, **Lines:** 100
+- **Kind:** route
+
+**Routes**
+- `POST /`
+
+**Exports**
+`router`
+
+
+### `backend/routes/webhooks.coinremitter.routes.js`
+
+- **Size:** 3354 bytes, **Lines:** 95
+- **Kind:** route
+- **Env vars referenced:** `COINREMITTER_WEBHOOK_TOKEN, NODE_ENV`
+
+**Routes**
+- `GET /wallet`
+- `POST /wallet`
+- `POST /wallet`
+
+**Exports**
+`router`
+
+
+### `backend/routes/webhooks.doge.routes.js`
+
+- **Size:** 1369 bytes, **Lines:** 40
+- **Kind:** route
+
+**Routes**
+- `GET /walletnotify`
+
+**Exports**
+`router`
+
+
+### `backend/routes/webhooks.gigawallet.routes.js`
+
+- **Size:** 2241 bytes, **Lines:** 60
+- **Kind:** route
+- **Env vars referenced:** `DOGE_MIN_CONF, GIGAWALLET_WEBHOOK_TOKEN`
+
+**Routes**
+- `POST /doge`
+
+**Exports**
+`router`
+
+
+### `backend/routes/webhooks.routes.js`
+
+- **Size:** 841 bytes, **Lines:** 18
+- **Kind:** route
+
+**Exports**
+`r`
+
+
+### `backend/routes/webhooks.stripe.routes.js`
+
+- **Size:** 2286 bytes, **Lines:** 65
+- **Kind:** route
+- **Env vars referenced:** `STRIPE_SECRET, STRIPE_TERMINAL_WEBHOOK_SECRET`
+
+**Routes**
+- `POST /`
+
+**Exports**
+`router`
+
+
+### `backend/scripts/bootstrap-db.js`
+
+- **Size:** 4024 bytes, **Lines:** 127
+- **Kind:** source
+- **Env vars referenced:** `MONGODB_URI, MONGO_URI`
+
+
+### `backend/scripts/helpers/ensure-user.mjs`
+
+- **Size:** 1895 bytes, **Lines:** 63
+- **Kind:** util
+- **Env vars referenced:** `MONGO_URI, SEED_EMAIL, SEED_NAME, SEED_PASSWORD, SEED_ROLE`
+
+**Exports**
+`ensureUser`
+
+
+### `backend/scripts/init-indexes.js`
+
+- **Size:** 1375 bytes, **Lines:** 36
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/migrations/20250812-add-emailNorm.mjs`
+
+- **Size:** 530 bytes, **Lines:** 19
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/peek-admin.js`
+
+- **Size:** 809 bytes, **Lines:** 33
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/reset-admin.js`
+
+- **Size:** 888 bytes, **Lines:** 37
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/seed-admin.js`
+
+- **Size:** 965 bytes, **Lines:** 31
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/seed-modes-and-profiles.mjs`
+
+- **Size:** 1540 bytes, **Lines:** 59
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/seed.js`
+
+- **Size:** 1926 bytes, **Lines:** 72
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI`
+
+
+### `backend/scripts/update-payments-validator.mjs`
+
+- **Size:** 1949 bytes, **Lines:** 62
+- **Kind:** source
+- **Env vars referenced:** `MONGO_URI, NODE_ENV`
+
+
+### `backend/server.js`
+
+- **Size:** 7840 bytes, **Lines:** 237
+- **Kind:** server
+- **Env vars referenced:** `API_BASE_URL, APP_BASE_URL, APP_VERSION, CORS_ORIGIN, NODE_ENV, PORT`
+
+**Exports**
+`app`
+
+**What it does**: Express app bootstrap. Loads security middleware (helmet, cors), request id, rate limiter, webhooks (Stripe/Coinbase/Coinremitter), normal API routers, serves frontend in production, connects to Mongo, and starts DOGE watchers (`startDogePriceWatcher`, `startDogeWatcher`).
+
+
+### `backend/services/coinbase.service.js`
+
+- **Size:** 1148 bytes, **Lines:** 35
+- **Kind:** service
+- **Env vars referenced:** `COINBASE_API_KEY, COINBASE_COMMERCE_BASE`
+
+
+### `backend/services/dogePrice.js`
+
+- **Size:** 2162 bytes, **Lines:** 79
+- **Kind:** service
+- **Env vars referenced:** `DOGE_PRICE_POLL_MS, DOGE_PRICE_SOURCE, GIGAWALLET_DOGE_USD_PRICE`
+
+**Exports**
+`getDogePriceState`, `getUsdPerDoge`, `startDogePriceWatcher`
+
+**What it does**: Maintains live DOGE/USD price. Sources from Coingecko every `DOGE_PRICE_INTERVAL_MS` with configurable fallback env `GIGAWALLET_DOGE_USD_PRICE`. Exposes `getUsdPerDoge()` and `/api/rates/doge` for frontend.
+
+
+### `backend/services/dogeWallet.service.js`
+
+- **Size:** 2596 bytes, **Lines:** 62
+- **Kind:** service
+- **Env vars referenced:** `DOGE_MASTER_TREASURY_ADDRESS, DOGE_MASTER_XPRV, DOGE_MIN_CONF`
+
+**Exports**
+`buildSweepTx`, `createPosWallet`, `getNextReceiveAddress`, `recordInboundTx`
+
+
+### `backend/services/dogeWatcher.js`
+
+- **Size:** 4820 bytes, **Lines:** 136
+- **Kind:** service
+- **Env vars referenced:** `DOGE_INCLUDE_WATCHONLY, DOGE_OVERWRITE_AMOUNT_ON_CONFIRM, DOGE_WATCHER_MIN_CONF, DOGE_WATCHER_POLL_MS, DOGE_WATCHER_WINDOW_TX`
+
+**Exports**
+`startDogeWatcher`, `stopDogeWatcher`
+
+**What it does**: Polls Dogecoin Core (`listtransactions`) every `DOGE.POLL_INTERVAL_MS` ms, de-dupes seen txs, enforces `MIN_CONFIRMATIONS`, fetches full tx (optional), and marks matching `Payment{method:'crypto', provider:'dogecoin-core'}` as `succeeded` with `crypto.txId` & `crypto.amount`. Logs unknown receive addresses.
+
+
+### `backend/services/orderNumber.js`
+
+- **Size:** 381 bytes, **Lines:** 11
+- **Kind:** service
+
+**Exports**
+`nextOrderNumber`
+
+
+### `backend/services/rates.service.js`
+
+- **Size:** 269 bytes, **Lines:** 6
+- **Kind:** service
+- **Env vars referenced:** `COINGECKO_API`
+
+
+### `backend/services/stripe-service.js`
+
+- **Size:** 0 bytes, **Lines:** 1
+- **Kind:** service
+
+
+### `backend/services/stripe.service.js`
+
+- **Size:** 519 bytes, **Lines:** 9
+- **Kind:** service
+- **Env vars referenced:** `STRIPE_SECRET`
+
+
+### `backend/services/tax.service.js`
+
+- **Size:** 104 bytes, **Lines:** 2
+- **Kind:** service
+
+
+### `backend/services/tokenVault.service.js`
+
+- **Size:** 1231 bytes, **Lines:** 26
+- **Kind:** service
+- **Env vars referenced:** `TOKEN_VAULT_DEV_KEY`
+
+**Exports**
+`inspectCardToken`, `mintCardToken`
+
+
+### `backend/services/ws.service.js`
+
+- **Size:** 275 bytes, **Lines:** 6
+- **Kind:** service
+
+
+### `backend/utils/asyncHandler.js`
+
+- **Size:** 150 bytes, **Lines:** 4
+- **Kind:** util
+
+
+### `backend/utils/hashChain.js`
+
+- **Size:** 172 bytes, **Lines:** 4
+- **Kind:** util
+
+
+### `backend/utils/logger.js`
+
+- **Size:** 518 bytes, **Lines:** 15
+- **Kind:** util
+- **Env vars referenced:** `LOG_LEVEL, NODE_ENV`
+
+
+### `backend/utils/money.js`
+
+- **Size:** 504 bytes, **Lines:** 12
+- **Kind:** util
+
+
+### `backend/utils/payrollMath.js`
+
+- **Size:** 707 bytes, **Lines:** 19
+- **Kind:** util
+- **Env vars referenced:** `OVERTIME_MULTIPLIER, PAYROLL_ER_FICA, PAYROLL_TAX_FED, PAYROLL_TAX_STATE`
+
+**Exports**
+`calcHours`, `envRates`
+
+
+### `backend/validation/auth.validation.js`
+
+- **Size:** 558 bytes, **Lines:** 17
+- **Kind:** source
+
+
+
+## Frontend
+
+### `frontend/.env`
+
+- **Size:** 38 bytes, **Lines:** 1
+- **Kind:** source
+
+
+### `frontend/package-lock.json`
+
+- **Size:** 150032 bytes, **Lines:** 3507
+- **Kind:** source
+
+
+### `frontend/package.json`
+
+- **Size:** 852 bytes, **Lines:** 32
+- **Kind:** source
+
+
+### `frontend/src/App.jsx`
+
+- **Size:** 872 bytes, **Lines:** 28
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/api/client.js`
+
+- **Size:** 2261 bytes, **Lines:** 79
+- **Kind:** source
+
+**Exports**
+`client`, `setAuth`
+
+
+### `frontend/src/api/devices.js`
+
+- **Size:** 578 bytes, **Lines:** 22
+- **Kind:** source
+
+
+### `frontend/src/api/profiles.js`
+
+- **Size:** 467 bytes, **Lines:** 17
+- **Kind:** source
+
+
+### `frontend/src/components/AnonymousOnly.jsx`
+
+- **Size:** 488 bytes, **Lines:** 17
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/DogeCheckout.tsx`
+
+- **Size:** 6466 bytes, **Lines:** 181
+- **Kind:** source
+
+**Exports**
+`function`
+
+**What it does**: POS-side flow for DOGE. Calls `/api/doge/address` with `amountCents`, shows address & QR (BIP21 dogecoin: URI), polls `/api/payments/:id` until `succeeded`, then shows 'Paid' and lets cashier complete the sale.
+
+
+### `frontend/src/components/Handheld/HandheldOrderScreen.jsx`
+
+- **Size:** 207 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/Kiosk/Bar/BarPosScreen.jsx`
+
+- **Size:** 184 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/Kiosk/Kitchen/KitchenScreen.jsx`
+
+- **Size:** 189 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/Kiosk/Restaurant/RestaurantPosScreen.jsx`
+
+- **Size:** 197 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/MobilePOS/MobilePosScreen.jsx`
+
+- **Size:** 181 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/POS/PosScreen.jsx`
+
+- **Size:** 179 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/Protected.jsx`
+
+- **Size:** 435 bytes, **Lines:** 13
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/StatCard.jsx`
+
+- **Size:** 377 bytes, **Lines:** 12
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/Table.jsx`
+
+- **Size:** 1229 bytes, **Lines:** 31
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/components/TopNav.jsx`
+
+- **Size:** 5640 bytes, **Lines:** 179
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/context/AuthProvider.jsx`
+
+- **Size:** 1900 bytes, **Lines:** 64
+- **Kind:** source
+
+**Exports**
+`AuthProvider`
+
+
+### `frontend/src/hooks/useApi.js`
+
+- **Size:** 455 bytes, **Lines:** 8
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/hooks/useStripeTerminal.js`
+
+- **Size:** 2759 bytes, **Lines:** 76
+- **Kind:** source
+
+**Exports**
+`useStripeTerminal`
+
+
+### `frontend/src/layout/DashboardShell.jsx`
+
+- **Size:** 885 bytes, **Lines:** 26
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/layout/Layout.jsx`
+
+- **Size:** 7203 bytes, **Lines:** 247
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/layout/Sidebar.jsx`
+
+- **Size:** 3238 bytes, **Lines:** 87
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/layout/TopBar.jsx`
+
+- **Size:** 840 bytes, **Lines:** 20
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/layout/TopNav.jsx`
+
+- **Size:** 4162 bytes, **Lines:** 143
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/main.jsx`
+
+- **Size:** 590 bytes, **Lines:** 21
+- **Kind:** source
+
+
+### `frontend/src/pages/Dashboard.jsx`
+
+- **Size:** 413 bytes, **Lines:** 15
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/NotFound.jsx`
+
+- **Size:** 165 bytes, **Lines:** 4
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/_Scaffold.jsx`
+
+- **Size:** 575 bytes, **Lines:** 15
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/admin/Admin.jsx`
+
+- **Size:** 133 bytes, **Lines:** 3
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/auth/Login.jsx`
+
+- **Size:** 2015 bytes, **Lines:** 47
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/auth/Logout.jsx`
+
+- **Size:** 226 bytes, **Lines:** 9
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/customers/Customers.jsx`
+
+- **Size:** 141 bytes, **Lines:** 3
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/dashboard/Dashboard.jsx`
+
+- **Size:** 171 bytes, **Lines:** 5
+- **Kind:** source
+
+**Exports**
+`Home`
+
+
+### `frontend/src/pages/dashboard/Home.jsx`
+
+- **Size:** 4831 bytes, **Lines:** 143
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/devices/Devices.jsx`
+
+- **Size:** 4950 bytes, **Lines:** 151
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/items/Categories.jsx`
+
+- **Size:** 141 bytes, **Lines:** 2
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/items/InventoryOverview.jsx`
+
+- **Size:** 4297 bytes, **Lines:** 97
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/items/ItemLibrary.jsx`
+
+- **Size:** 4046 bytes, **Lines:** 102
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/items/Modifiers.jsx`
+
+- **Size:** 139 bytes, **Lines:** 2
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/orders/Orders.jsx`
+
+- **Size:** 2394 bytes, **Lines:** 62
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/payments/CryptoPay.jsx`
+
+- **Size:** 1351 bytes, **Lines:** 37
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/payments/Overview.jsx`
+
+- **Size:** 2151 bytes, **Lines:** 60
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/payments/VirtualTerminal.jsx`
+
+- **Size:** 859 bytes, **Lines:** 20
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pos/BarDisplay.jsx`
+
+- **Size:** 144 bytes, **Lines:** 2
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pos/Kiosk.jsx`
+
+- **Size:** 158 bytes, **Lines:** 2
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pos/KitchenDisplay.jsx`
+
+- **Size:** 152 bytes, **Lines:** 2
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pos/ModifierDialog.jsx`
+
+- **Size:** 3718 bytes, **Lines:** 95
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pos/POSModeRouter.jsx`
+
+- **Size:** 543 bytes, **Lines:** 15
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pos/StandardPOS.jsx`
+
+- **Size:** 9623 bytes, **Lines:** 266
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/pricing/Discounts.jsx`
+
+- **Size:** 145 bytes, **Lines:** 2
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/profiles/Profiles.jsx`
+
+- **Size:** 3366 bytes, **Lines:** 116
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/reports/PaymentMethods.jsx`
+
+- **Size:** 150 bytes, **Lines:** 4
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/reports/Reports.jsx`
+
+- **Size:** 137 bytes, **Lines:** 3
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/reports/SalesSummary.jsx`
+
+- **Size:** 486 bytes, **Lines:** 16
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/reports/_SalesGauge.jsx`
+
+- **Size:** 939 bytes, **Lines:** 30
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/settings/General.jsx`
+
+- **Size:** 635 bytes, **Lines:** 15
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/terminal/Crypto.jsx`
+
+- **Size:** 1519 bytes, **Lines:** 43
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pages/terminal/Terminal.jsx`
+
+- **Size:** 3578 bytes, **Lines:** 93
+- **Kind:** source
+
+**Exports**
+`function`
+
+
+### `frontend/src/pos/checkout.js`
+
+- **Size:** 4000 bytes, **Lines:** 117
+- **Kind:** source
+
+
+### `frontend/src/router.jsx`
+
+- **Size:** 2252 bytes, **Lines:** 58
+- **Kind:** source
+
+
+### `frontend/src/services/api.js`
+
+- **Size:** 293 bytes, **Lines:** 5
+- **Kind:** service
+
+**Exports**
+`api`
+
+
+### `frontend/src/shared/dashboard/CategoriesCard.jsx`
+
+- **Size:** 448 bytes, **Lines:** 14
+- **Kind:** source
+
+**Exports**
+`CategoriesCard`
+
+
+### `frontend/src/shared/dashboard/CustomersCard.jsx`
+
+- **Size:** 1307 bytes, **Lines:** 34
+- **Kind:** source
+
+**Exports**
+`CustomersCard`
+
+
+### `frontend/src/shared/dashboard/ItemsCard.jsx`
+
+- **Size:** 435 bytes, **Lines:** 14
+- **Kind:** source
+
+**Exports**
+`ItemsCard`
+
+
+### `frontend/src/shared/dashboard/KPIs.jsx`
+
+- **Size:** 1055 bytes, **Lines:** 27
+- **Kind:** source
+
+**Exports**
+`KPIs`
+
+
+### `frontend/src/shared/dashboard/PaymentTypeChart.jsx`
+
+- **Size:** 4081 bytes, **Lines:** 123
+- **Kind:** source
+
+**Exports**
+`PaymentTypeChart`
+
+
+### `frontend/src/shared/dashboard/SetupChecklist.jsx`
+
+- **Size:** 721 bytes, **Lines:** 25
+- **Kind:** source
+
+**Exports**
+`SetupChecklist`
+
+
+### `frontend/src/shared/useDashboardData.js`
+
+- **Size:** 1647 bytes, **Lines:** 69
+- **Kind:** source
+
+**Exports**
+`useDashboardData`
+
+
+### `frontend/src/shared/useDashboardData.jsx`
+
+- **Size:** 1484 bytes, **Lines:** 64
+- **Kind:** source
+
+**Exports**
+`useDashboardData`
+
+
+### `frontend/src/theme/index.js`
+
+- **Size:** 313 bytes, **Lines:** 13
+- **Kind:** source
+
+**Exports**
+`theme`
+
+
+### `frontend/src/theme/presets.js`
+
+- **Size:** 328 bytes, **Lines:** 6
+- **Kind:** source
+
+
+### `frontend/src/utils/ledger.js`
+
+- **Size:** 1026 bytes, **Lines:** 34
+- **Kind:** util
+
+
+### `frontend/src/utils/money.js`
+
+- **Size:** 191 bytes, **Lines:** 3
+- **Kind:** util
+
+
+### `frontend/src/validation/loginSchema.js`
+
+- **Size:** 493 bytes, **Lines:** 18
+- **Kind:** source
+
+
+### `frontend/vite.config.js`
+
+- **Size:** 157 bytes, **Lines:** 4
+- **Kind:** source
+
+**Exports**
+`defineConfig`
+
