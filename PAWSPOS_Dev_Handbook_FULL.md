@@ -1,7 +1,8 @@
 # PAWSPOS Developer Handbook — Full Source Map
 _Last generated: **2025-08-15 03:25 UTC**_
 
-This document enumerates **every file** in the uploaded source tree (backend + frontend) and annotates it with an inferred role and any top-of-file header comment detected. Use this as your onboarding map alongside inline code.
+This document enumerates **every file** in the uploaded source tree (backend + frontend) and annotates it with an inferred role and any top-of-file header comment detected.
+this will help as an onboarding map or something later, ill make a better dev handbook.
 
 > Tip: Search within this file (Ctrl/Cmd+F) for a filename or folder (e.g. `routes/`, `models/`, `pos/`) to jump quickly.
 
